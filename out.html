@@ -21,6 +21,7 @@
       overflow-x: hidden;
       position: relative;
     }
+
     /* Prevent native date inputs and flex/grid children from forcing horizontal overflow */
     input, button, select, textarea {
       max-width: 100%;
@@ -263,33 +264,39 @@
 
           <!-- Security Deposit Input Box -->
           <div class="p-4 rounded-xl bg-slate-50 border border-slate-200/90 mb-5">
-            <label for="deposit-input" class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Security Deposit Held
-            </label>
+            <div class="flex items-center justify-between gap-2 mb-1.5">
+              <label for="deposit-input" class="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                Security Deposit Held
+              </label>
+              <span id="deposit-calc-preview" class="hidden text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md tabular-nums">
+                = ₹0
+              </span>
+            </div>
             <div class="relative flex items-center">
               <span class="absolute left-3.5 text-slate-500 font-bold text-base">₹</span>
               <input
-                type="number"
+                type="text"
                 inputmode="decimal"
                 id="deposit-input"
                 value=""
-                placeholder="0"
-                min="0"
-                step="any"
+                placeholder="0 (supports +, -, *, /)"
                 oninput="recalculateFinances()"
+                onblur="formatEvaluatedField(this, false)"
+                onkeydown="if(event.key==='Enter'){ formatEvaluatedField(this, false); }"
                 class="w-full pl-8 pr-4 py-2.5 rounded-xl bg-white border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-lg font-bold text-slate-900 tabular-nums transition"
               />
             </div>
+            <p class="text-[11px] text-slate-400 mt-1.5 no-print">Tip: You can type math like <span class="font-semibold text-slate-500">50000+10000</span></p>
           </div>
 
           <!-- Owner Credits / Additions Payable to Tenant Section -->
           <div class="mb-6 pb-5 border-b border-slate-200">
             <div class="flex items-center justify-between mb-1.5">
               <span class="text-xs font-bold uppercase tracking-wider text-emerald-700">Owner Payable / Credits to Tenant (+)</span>
-              <span class="text-xs text-slate-400">Amount (₹)</span>
+              <span class="text-xs text-slate-400">Amount / Math (₹)</span>
             </div>
             <p class="text-xs text-slate-500 mb-3">
-              Add items the owner owes the tenant (e.g., unused rent refund, advance maintenance, or tenant-paid repairs).
+              Add items the owner owes the tenant (supports math expressions like <span class="font-medium text-slate-600">1200+350</span>).
             </p>
 
             <!-- Dynamic Owner Credits Container -->
@@ -313,7 +320,7 @@
           <!-- Deductions List Header -->
           <div class="flex items-center justify-between mb-3">
             <span class="text-xs font-bold uppercase tracking-wider text-rose-600">Deduction Line Items (-)</span>
-            <span class="text-xs text-slate-400">Amount (₹)</span>
+            <span class="text-xs text-slate-400">Amount / Math (₹)</span>
           </div>
 
           <!-- Dynamic Deductions Container -->
@@ -433,9 +440,15 @@
 
   <script>
     // =========================================================================
-    // 1. INITIAL DEFAULT DATA & STATE (CLEAN / BLANK START)
+    // 1. STATE & PRESET DEFINITIONS
     // =========================================================================
-    const DEFAULT_DEPOSIT = '';
+    const OWNER_CREDIT_PRESETS = [
+      'Prorated Unused Rent Refund',
+      'Advance Maintenance Credit',
+      'Tenant-Paid Plumbing / Electrical Repair',
+      'Appliance / Fixture Reimbursement',
+      'Custom Owner Credit'
+    ];
 
     const DEDUCTION_PRESETS = [
       'EB Bill (Electricity)',
@@ -448,43 +461,120 @@
       'Custom Expense'
     ];
 
-    const OWNER_CREDIT_PRESETS = [
-      'Prorated Unused Rent Refund',
-      'Advance Maintenance Credit',
-      'Tenant-Paid Plumbing / Electrical Repair',
-      'Appliance / Fixture Reimbursement',
-      'Overpaid Utility Refund',
-      'Custom Owner Credit'
-    ];
+    function getDefaultCredits() {
+      return [];
+    }
 
-    const getDefaultDeductions = () => [
-      { id: 'ded-1', category: 'EB Bill (Electricity)', customLabel: '', amount: '', isDefault: true },
-      { id: 'ded-2', category: 'PNG Gas', customLabel: '', amount: '', isDefault: true },
-      { id: 'ded-3', category: 'Painting (3BHK)', customLabel: '', amount: '', isDefault: true },
-      { id: 'ded-4', category: 'Deep Cleaning', customLabel: '', amount: '', isDefault: true }
-    ];
+    function getDefaultDeductions() {
+      return [
+        { id: 'ded-1', category: 'EB Bill (Electricity)', customLabel: '', amount: '', isDefault: true },
+        { id: 'ded-2', category: 'PNG Gas', customLabel: '', amount: '', isDefault: true },
+        { id: 'ded-3', category: 'Painting (3BHK)', customLabel: '', amount: '', isDefault: true },
+        { id: 'ded-4', category: 'Deep Cleaning', customLabel: '', amount: '', isDefault: true }
+      ];
+    }
 
-    const getDefaultCredits = () => [];
+    function getDefaultChecklist() {
+      return [
+        { id: 'chk-1', label: 'Fan Remote', matched: false, notes: '' },
+        { id: 'chk-2', label: 'Main Door Keys', matched: false, notes: '' },
+        { id: 'chk-3', label: 'Individual Keys of 3 Bedrooms', matched: false, notes: '' },
+        { id: 'chk-4', label: '2 Bathroom Keys', matched: false, notes: '' },
+        { id: 'chk-5', label: 'MLCP Access Cards', matched: false, notes: '' }
+      ];
+    }
 
-    const getDefaultChecklist = () => [
-      { id: 'chk-1', label: 'Fan Remote', matched: false, notes: '' },
-      { id: 'chk-2', label: 'Main Door Keys', matched: false, notes: '' },
-      { id: 'chk-3', label: 'Individual Keys of 3 Bedrooms', matched: false, notes: '' },
-      { id: 'chk-4', label: '2 Bathroom Keys', matched: false, notes: '' },
-      { id: 'chk-5', label: 'MLCP Access Cards', matched: false, notes: '' }
-    ];
-
-    let deductions = getDefaultDeductions();
     let ownerCredits = getDefaultCredits();
+    let deductions = getDefaultDeductions();
     let checklist = getDefaultChecklist();
     let checklistFilter = 'all';
 
     // =========================================================================
-    // 2. UTILITY FUNCTIONS (FORMATTERS, ESCAPING, TOAST)
+    // 2. UTILITY FUNCTIONS (FORMATTERS, MATH EVALUATOR, ESCAPING, TOAST)
     // =========================================================================
     function formatINR(num) {
       const val = Number(num) || 0;
       return '₹' + val.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    }
+
+    /**
+     * Safely evaluates arithmetic expressions containing +, -, *, /, %, and ()
+     * Returns { value: number, isExpression: boolean, valid: boolean }
+     */
+    function evaluateAmountInput(rawInput) {
+      if (rawInput === null || rawInput === undefined) {
+        return { value: 0, isExpression: false, valid: true };
+      }
+      // Normalize visual math symbols (×, ÷, −) and strip commas/spaces/currency symbol
+      let expr = String(rawInput)
+        .replace(/[₹,\s]/g, '')
+        .replace(/×/g, '*')
+        .replace(/÷/g, '/')
+        .replace(/[−–—]/g, '-');
+
+      if (!expr) {
+        return { value: 0, isExpression: false, valid: true };
+      }
+
+      // Check if user entered any arithmetic operator after the first character
+      const hasOperator = /[+\-*/%()]/.test(expr.slice(1)) || /^[*(/%]/.test(expr);
+
+      // Plain number check
+      if (!hasOperator) {
+        const num = parseFloat(expr);
+        return {
+          value: isNaN(num) ? 0 : Math.max(0, num),
+          isExpression: false,
+          valid: !isNaN(num)
+        };
+      }
+
+      // Strip trailing incomplete operators while user is mid-typing (e.g., "1500+" -> "1500")
+      let cleanExpr = expr.replace(/[+\-*/%.(]+$/, '');
+      if (!cleanExpr) {
+        return { value: 0, isExpression: true, valid: false };
+      }
+
+      // Auto-close unmatched opening parentheses while typing (e.g., "(500+200" -> "(500+200)")
+      const openParens = (cleanExpr.match(/\(/g) || []).length;
+      const closeParens = (cleanExpr.match(/\)/g) || []).length;
+      if (openParens > closeParens) {
+        cleanExpr += ')'.repeat(openParens - closeParens);
+      }
+
+      // Strict whitelist validation: only digits, decimal points, operators, and parentheses
+      if (!/^[0-9+\-*/%.()]+$/.test(cleanExpr)) {
+        return { value: 0, isExpression: true, valid: false };
+      }
+
+      try {
+        // Safe evaluation of pure math tokens
+        const result = Function('"use strict"; return (' + cleanExpr + ');')();
+        if (typeof result === 'number' && isFinite(result)) {
+          const rounded = Math.round(result * 100) / 100;
+          return {
+            value: Math.max(0, rounded),
+            isExpression: true,
+            valid: true
+          };
+        }
+      } catch (e) {
+        // Incomplete expression mid-typing
+      }
+      return { value: 0, isExpression: true, valid: false };
+    }
+
+    function formatEvaluatedField(inputEl, isCreditOrDeduction) {
+      if (!inputEl) return;
+      const raw = inputEl.value.trim();
+      if (!raw) return;
+      const parsed = evaluateAmountInput(raw);
+      if (parsed.valid && parsed.isExpression) {
+        inputEl.value = parsed.value;
+        if (!isCreditOrDeduction) {
+          recalculateFinances();
+        }
+      }
     }
 
     function escapeHtml(str) {
@@ -536,6 +626,8 @@
 
       ownerCredits.forEach((item) => {
         const listId = `credit-presets-${item.id}`;
+        const parsed = evaluateAmountInput(item.amount);
+        const showPreview = parsed.isExpression && parsed.valid;
         const row = document.createElement('div');
         row.className = 'p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/80 space-y-2.5';
 
@@ -568,18 +660,23 @@
             </button>
           </div>
 
-          <div class="flex items-center justify-between gap-3 pt-0.5">
-            <span class="text-xs font-medium text-emerald-700/80">Credit Amount</span>
-            <div class="relative w-36 sm:w-40 shrink-0 flex items-center">
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-xs font-medium text-emerald-700/80">Credit Amount</span>
+              <span id="credit-preview-${item.id}" class="${showPreview ? '' : 'hidden'} text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md tabular-nums">
+                = ${formatINR(parsed.value)}
+              </span>
+            </div>
+            <div class="relative w-40 sm:w-44 shrink-0 flex items-center">
               <span class="absolute left-3 text-emerald-700 font-bold text-sm">₹</span>
               <input
-                type="number"
+                type="text"
                 inputmode="decimal"
                 value="${escapeHtml(item.amount)}"
-                placeholder="0"
-                min="0"
-                step="any"
+                placeholder="0 or 500+200"
                 oninput="updateCreditAmount('${item.id}', this.value)"
+                onblur="commitCreditExpression('${item.id}')"
+                onkeydown="if(event.key==='Enter'){ commitCreditExpression('${item.id}'); }"
                 class="w-full pl-7 pr-3 py-2 rounded-lg border border-emerald-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 text-sm font-bold text-emerald-800 text-right tabular-nums transition"
               />
             </div>
@@ -613,7 +710,27 @@
       const item = ownerCredits.find(c => c.id === id);
       if (item) {
         item.amount = val;
+        const previewEl = document.getElementById(`credit-preview-${id}`);
+        if (previewEl) {
+          const parsed = evaluateAmountInput(val);
+          if (parsed.isExpression && parsed.valid) {
+            previewEl.textContent = `= ${formatINR(parsed.value)}`;
+            previewEl.classList.remove('hidden');
+          } else {
+            previewEl.classList.add('hidden');
+          }
+        }
         recalculateFinances();
+      }
+    }
+
+    function commitCreditExpression(id) {
+      const item = ownerCredits.find(c => c.id === id);
+      if (!item) return;
+      const parsed = evaluateAmountInput(item.amount);
+      if (parsed.valid && parsed.isExpression) {
+        item.amount = String(parsed.value);
+        renderCredits();
       }
     }
 
@@ -629,6 +746,8 @@
 
       deductions.forEach((item) => {
         const listId = `deduction-presets-${item.id}`;
+        const parsed = evaluateAmountInput(item.amount);
+        const showPreview = parsed.isExpression && parsed.valid;
         const row = document.createElement('div');
         row.className = 'p-3 rounded-xl bg-slate-50 border border-slate-200/90 space-y-2.5';
 
@@ -661,111 +780,26 @@
             </button>
           </div>
 
-          <div class="flex items-center justify-between gap-3 pt-0.5">
-            <span class="text-xs font-medium text-slate-500">Deduction Amount</span>
-            <div class="relative w-36 sm:w-40 shrink-0 flex items-center">
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-xs font-medium text-slate-500">Deduction Amount</span>
+              <span id="deduction-preview-${item.id}" class="${showPreview ? '' : 'hidden'} text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md tabular-nums">
+                = ${formatINR(parsed.value)}
+              </span>
+            </div>
+            <div class="relative w-40 sm:w-44 shrink-0 flex items-center">
               <span class="absolute left-3 text-slate-500 font-bold text-sm">₹</span>
               <input
-                type="number"
+                type="text"
                 inputmode="decimal"
                 value="${escapeHtml(item.amount)}"
-                placeholder="0"
-                min="0"
-                step="any"
+                placeholder="0 or 1500+450"
                 oninput="updateDeductionAmount('${item.id}', this.value)"
+                onblur="commitDeductionExpression('${item.id}')"
+                onkeydown="if(event.key==='Enter'){ commitDeductionExpression('${item.id}'); }"
                 class="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm font-bold text-slate-900 text-right tabular-nums transition"
               />
             </div>
-          </div>
-        `;
-        container.appendChild(row);
-      });
-
-      recalculateFinances();
-    }
-
-    function addCreditRow() {
-      ownerCredits.push({
-        id: 'crd-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-        category: '',
-        customLabel: '',
-        amount: ''
-      });
-      renderCredits();
-    }
-
-    function updateCreditCategory(id, val) {
-      const item = ownerCredits.find(c => c.id === id);
-      if (item) {
-        item.category = val;
-        recalculateFinances();
-      }
-    }
-
-    function updateCreditAmount(id, val) {
-      const item = ownerCredits.find(c => c.id === id);
-      if (item) {
-        item.amount = val;
-        recalculateFinances();
-      }
-    }
-
-    function removeCreditRow(id) {
-      ownerCredits = ownerCredits.filter(c => c.id !== id);
-      renderCredits();
-    }
-
-    function renderDeductions() {
-      const container = document.getElementById('deductions-list');
-      if (!container) return;
-      container.innerHTML = '';
-
-      deductions.forEach((item) => {
-        const listId = `deduction-presets-${item.id}`;
-        const row = document.createElement('div');
-        row.className = 'p-3 rounded-xl bg-slate-50 border border-slate-200/90 space-y-2';
-
-        row.innerHTML = `
-          <div class="flex items-center gap-2">
-            <div class="flex-1 min-w-0">
-              <input
-                type="text"
-                inputmode="text"
-                list="${listId}"
-                value="${escapeHtml(item.category)}"
-                placeholder="Select or type deduction..."
-                oninput="updateDeductionCategory('${item.id}', this.value)"
-                class="w-full min-w-0 px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-xs sm:text-sm font-semibold text-slate-800 transition"
-              />
-              <datalist id="${listId}">
-                ${DEDUCTION_PRESETS.map(p => `<option value="${escapeHtml(p)}"></option>`).join('')}
-              </datalist>
-            </div>
-
-            <div class="relative w-28 sm:w-32 shrink-0 flex items-center">
-              <span class="absolute left-2.5 text-slate-500 font-bold text-xs sm:text-sm">₹</span>
-              <input
-                type="number"
-                inputmode="decimal"
-                value="${escapeHtml(item.amount)}"
-                placeholder="0"
-                min="0"
-                step="any"
-                oninput="updateDeductionAmount('${item.id}', this.value)"
-                class="w-full pl-6 pr-2.5 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-xs sm:text-sm font-bold text-slate-900 text-right tabular-nums transition"
-              />
-            </div>
-
-            <button
-              type="button"
-              onclick="removeDeductionRow('${item.id}')"
-              title="Remove deduction item"
-              class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition shrink-0 cursor-pointer no-print"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
           </div>
         `;
         container.appendChild(row);
@@ -797,7 +831,27 @@
       const item = deductions.find(d => d.id === id);
       if (item) {
         item.amount = val;
+        const previewEl = document.getElementById(`deduction-preview-${id}`);
+        if (previewEl) {
+          const parsed = evaluateAmountInput(val);
+          if (parsed.isExpression && parsed.valid) {
+            previewEl.textContent = `= ${formatINR(parsed.value)}`;
+            previewEl.classList.remove('hidden');
+          } else {
+            previewEl.classList.add('hidden');
+          }
+        }
         recalculateFinances();
+      }
+    }
+
+    function commitDeductionExpression(id) {
+      const item = deductions.find(d => d.id === id);
+      if (!item) return;
+      const parsed = evaluateAmountInput(item.amount);
+      if (parsed.valid && parsed.isExpression) {
+        item.amount = String(parsed.value);
+        renderDeductions();
       }
     }
 
@@ -808,12 +862,23 @@
 
     function recalculateFinances() {
       const depositInput = document.getElementById('deposit-input');
-      const deposit = Math.max(0, parseFloat(depositInput.value) || 0);
+      const depositParsed = evaluateAmountInput(depositInput.value);
+      const deposit = depositParsed.value;
+
+      const depositPreview = document.getElementById('deposit-calc-preview');
+      if (depositPreview) {
+        if (depositParsed.isExpression && depositParsed.valid) {
+          depositPreview.textContent = `= ${formatINR(deposit)}`;
+          depositPreview.classList.remove('hidden');
+        } else {
+          depositPreview.classList.add('hidden');
+        }
+      }
 
       let totalCredits = 0;
       const activeCredits = [];
       ownerCredits.forEach((item) => {
-        const amt = Math.max(0, parseFloat(item.amount) || 0);
+        const amt = evaluateAmountInput(item.amount).value;
         if (amt > 0) {
           totalCredits += amt;
           activeCredits.push({
@@ -826,7 +891,7 @@
       let totalDeductions = 0;
       const activeDeductions = [];
       deductions.forEach((item) => {
-        const amt = Math.max(0, parseFloat(item.amount) || 0);
+        const amt = evaluateAmountInput(item.amount).value;
         if (amt > 0) {
           totalDeductions += amt;
           activeDeductions.push({
@@ -1129,11 +1194,11 @@
       const unitNumber = document.getElementById('unit-number').value.trim();
       const moveoutDate = document.getElementById('moveout-date').value;
 
-      const deposit = Math.max(0, parseFloat(document.getElementById('deposit-input').value) || 0);
+      const deposit = evaluateAmountInput(document.getElementById('deposit-input').value).value;
       let totalCredits = 0;
       const creditLines = [];
       ownerCredits.forEach(item => {
-        const amt = Math.max(0, parseFloat(item.amount) || 0);
+        const amt = evaluateAmountInput(item.amount).value;
         if (amt > 0) {
           totalCredits += amt;
           creditLines.push(`  + ${getEffectiveCreditLabel(item)}: ${formatINR(amt)}`);
@@ -1143,7 +1208,7 @@
       let totalDeductions = 0;
       const deductionLines = [];
       deductions.forEach(item => {
-        const amt = Math.max(0, parseFloat(item.amount) || 0);
+        const amt = evaluateAmountInput(item.amount).value;
         if (amt > 0) {
           totalDeductions += amt;
           deductionLines.push(`  - ${getEffectiveDeductionLabel(item)}: ${formatINR(amt)}`);
