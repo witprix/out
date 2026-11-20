@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light" />
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Move-Out" />
   <title>Tenant Move-Out Settlement & Handover Checklist</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -11,77 +16,73 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       max-width: 100%;
       overflow-x: hidden;
-      position: relative;
+      min-height: 100vh; min-height: 100dvh;
+      padding-left: env(safe-area-inset-left, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+      -webkit-tap-highlight-color: transparent;
     }
+    /* No 300ms tap delay / double-tap zoom on controls */
+    button, input, select, label, a { touch-action: manipulation; }
+    button { -webkit-user-select: none; user-select: none; }
+    input, button, select, textarea { max-width: 100%; }
 
-    /* Prevent native date inputs and flex/grid children from forcing horizontal overflow */
-    input, button, select, textarea {
-      max-width: 100%;
-    }
-
-    /* Prevent iOS Safari & mobile browsers from auto-zooming ("maxing") when typing in fields < 16px */
+    /* iOS Safari auto-zooms on focus if font < 16px */
     @media screen and (max-width: 768px) {
-      input[type="text"],
-      input[type="number"],
-      input[type="date"],
-      select,
-      textarea {
-        font-size: 16px !important;
-      }
+      input[type="text"], input[type="number"], input[type="date"], select, textarea { font-size: 16px !important; }
+    }
+    /* Larger touch targets on touch devices */
+    @media (pointer: coarse) {
+      .tap-target { min-width: 44px; min-height: 44px; }
+      .chip { padding: .5rem .75rem !important; font-size: 12px !important; }
     }
 
-    input[type="date"] {
-      min-width: 0;
-      -webkit-appearance: none;
-    }
+    select { -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2364748b' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right .75rem center; padding-right: 2.25rem !important; text-overflow: ellipsis; }
 
-    /* Hide number input spinners for cleaner financial inputs */
+    input[type="date"] { min-width: 0; min-height: 2.75rem; display: block; -webkit-appearance: none; appearance: none; text-align: left; }
+    input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+
     input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    input[type="number"] {
-      -moz-appearance: textfield;
-    }
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type="number"] { -moz-appearance: textfield; }
 
-    /* Custom Print Styles for Clean PDF / Paper Statement */
+    [data-math] { scroll-margin-bottom: 140px; }
+
+    /* Math helper bar (sits above the on-screen keyboard) */
+    #math-bar { display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+      padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); background: #e2e8f0; border-top: 1px solid #cbd5e1; gap: 6px; }
+    #math-bar.show { display: flex; }
+    #math-bar button { flex: 1 1 0; min-height: 44px; border-radius: 10px; background: #fff; border: 1px solid #cbd5e1;
+      font-size: 18px; font-weight: 700; color: #1e293b; }
+    #math-bar button:active { background: #c7d2fe; }
+    #math-bar button.done { background: #4f46e5; color: #fff; border-color: #4f46e5; font-size: 14px; flex: 1.4 1 0; }
+
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+    @page { margin: 12mm; }
     @media print {
-      body {
-        background: #ffffff !important;
-        color: #0f172a !important;
-      }
-      .no-print {
-        display: none !important;
-      }
-      .print-only {
-        display: block !important;
-      }
-      .print-shadow-none {
-        box-shadow: none !important;
-        border: 1px solid #cbd5e1 !important;
-      }
-      input, select, textarea {
-        border: none !important;
-        background: transparent !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-      }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { background: #fff !important; color: #0f172a !important; padding: 0 !important; }
+      .no-print, #math-bar, #toast { display: none !important; }
+      .print-shadow-none { box-shadow: none !important; border: 1px solid #cbd5e1 !important; break-inside: avoid; }
+      #checklist-items-container > div { break-inside: avoid; }
+      input, select, textarea { border: none !important; background: transparent !important; padding-left: 0 !important; padding-right: 0 !important; background-image: none !important; }
+      input::placeholder { color: transparent !important; }
+      header { position: static !important; }
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased min-h-screen w-full overflow-x-hidden pb-16">
+<body class="bg-slate-100 text-slate-800 antialiased w-full pb-28">
 
   <!-- Toast Notification Banner (Replaces alert()) -->
-  <div id="toast" class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-5 sm:bottom-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none no-print">
+  <div id="toast" role="status" aria-live="polite" class="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-5 sm:bottom-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none no-print">
     <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium border border-slate-700">
       <span id="toast-icon" class="text-emerald-400">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -93,7 +94,7 @@
   </div>
 
   <!-- Confirmation Modal (Replaces confirm()) -->
-  <div id="confirm-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 no-print">
+  <div id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="reset-title" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 no-print">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
       <div class="flex items-center gap-3 text-amber-600 mb-3">
         <div class="p-2 bg-amber-50 rounded-xl">
@@ -101,7 +102,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
           </svg>
         </div>
-        <h3 class="text-lg font-bold text-slate-900">Reset All Fields?</h3>
+        <h3 id="reset-title" class="text-lg font-bold text-slate-900">Reset All Fields?</h3>
       </div>
       <p class="text-sm text-slate-600 mb-6">
         This will clear all entered amounts, reset deductions, remove owner credits &amp; custom rows, and unmark all handover checklist items.
@@ -110,7 +111,7 @@
         <button id="cancel-reset-btn" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
           Cancel
         </button>
-        <button id="confirm-reset-btn" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition shadow-xs cursor-pointer">
+        <button id="confirm-reset-btn" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 transition shadow-sm cursor-pointer">
           Yes, Reset Everything
         </button>
       </div>
@@ -118,7 +119,7 @@
   </div>
 
   <!-- Top Navigation / Action Header -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs w-full">
+  <header style="padding-top: env(safe-area-inset-top, 0px)" class="bg-white border-b border-slate-200 lg:sticky lg:top-0 z-30 shadow-sm w-full">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 sm:py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3.5">
       <div class="flex items-center gap-3 min-w-0">
         <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm shrink-0">
@@ -134,14 +135,19 @@
 
       <!-- Toolbar Buttons -->
       <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 no-print w-full lg:w-auto">
-        <button onclick="shareViaWhatsApp()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-2xs cursor-pointer">
+        <button onclick="shareViaWhatsApp()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm cursor-pointer">
           <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zM12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2.546 20.2c-.151.512.326.989.838.838l3.032-.892A9.957 9.957 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
           </svg>
           <span>WhatsApp</span>
         </button>
 
-        <button onclick="shareViaEmail()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-sky-600 text-white hover:bg-sky-700 transition shadow-2xs cursor-pointer">
+        <button onclick="shareNative()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-violet-600 text-white hover:bg-violet-700 transition shadow-sm cursor-pointer">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v13"></path></svg>
+          <span>Share</span>
+        </button>
+
+        <button onclick="shareViaEmail()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-sky-600 text-white hover:bg-sky-700 transition shadow-sm cursor-pointer">
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
           </svg>
@@ -155,18 +161,18 @@
           <span>Copy</span>
         </button>
 
-        <button onclick="window.print()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-white hover:bg-slate-900 transition shadow-2xs cursor-pointer">
+        <button onclick="window.print()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 text-white hover:bg-slate-900 transition shadow-sm cursor-pointer">
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
           </svg>
           <span>Print / PDF</span>
         </button>
 
-        <button onclick="openResetModal()" class="col-span-2 sm:col-span-1 w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition cursor-pointer" title="Reset all values">
+        <button onclick="openResetModal()" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition cursor-pointer" title="Reset all values">
           <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
-          <span class="sm:hidden lg:inline">Reset</span>
+          <span>Reset</span>
         </button>
       </div>
     </div>
@@ -176,7 +182,7 @@
   <main class="max-w-6xl mx-auto px-4 sm:px-6 mt-6 space-y-6 w-full">
 
     <!-- Property & Tenant Metadata Card -->
-    <section class="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200 print-shadow-none w-full">
+    <section class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 print-shadow-none w-full">
       <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
         <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Tenancy &amp; Handover Details (Optional)</h2>
         <span class="text-xs text-slate-400 no-print">Editable for receipt/PDF export</span>
@@ -215,7 +221,7 @@
 
           <div class="mt-3 mb-5">
             <div id="net-amount-display" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-emerald-700 tabular-nums">
-              ₹57,245
+              ₹0
             </div>
             <p id="net-subtext" class="text-xs text-emerald-700/80 mt-1 font-medium">
               Deposit minus total deductions
@@ -225,7 +231,7 @@
           <div class="pt-4 border-t border-slate-200/80 space-y-2.5 text-sm">
             <div class="flex justify-between items-center">
               <span class="text-slate-600 font-medium">Security Deposit</span>
-              <span id="summary-deposit" class="font-bold text-slate-900 tabular-nums">₹60,000</span>
+              <span id="summary-deposit" class="font-bold text-slate-900 tabular-nums">₹0</span>
             </div>
 
             <!-- Transparent Itemized Owner Credits / Additions Breakdown -->
@@ -250,13 +256,13 @@
 
             <div class="flex justify-between items-center pt-2 border-t border-slate-200/60">
               <span class="text-slate-700 font-semibold">Total Deductions</span>
-              <span id="summary-deductions" class="font-bold text-rose-600 tabular-nums">- ₹2,755</span>
+              <span id="summary-deductions" class="font-bold text-rose-600 tabular-nums">₹0</span>
             </div>
           </div>
         </section>
 
         <!-- Deposit, Owner Credits & Deductions Editor Card -->
-        <section class="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200 print-shadow-none w-full">
+        <section class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 print-shadow-none w-full">
           <h2 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
             <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold">₹</span>
             <span>Deposit, Credits &amp; Deductions</span>
@@ -280,9 +286,7 @@
                 id="deposit-input"
                 value=""
                 placeholder="0 (supports +, -, *, /)"
-                oninput="recalculateFinances()"
-                onblur="formatEvaluatedField(this, false)"
-                onkeydown="if(event.key==='Enter'){ formatEvaluatedField(this, false); }"
+                data-math autocomplete="off" enterkeyhint="done"
                 class="w-full pl-8 pr-4 py-2.5 rounded-xl bg-white border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-lg font-bold text-slate-900 tabular-nums transition"
               />
             </div>
@@ -344,7 +348,7 @@
 
       <!-- RIGHT COLUMN (7 cols on lg): Handover Action Items Checklist -->
       <div class="lg:col-span-7 min-w-0 w-full">
-        <section class="bg-white rounded-2xl p-4 sm:p-6 shadow-xs border border-slate-200 print-shadow-none w-full">
+        <section class="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-200 print-shadow-none w-full">
 
           <!-- Checklist Header & Master Match-All Button -->
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-slate-200">
@@ -365,7 +369,7 @@
               type="button"
               id="master-match-btn"
               onclick="toggleAllChecklistItems()"
-              class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200 shadow-2xs cursor-pointer shrink-0 bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+              class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200 shadow-sm cursor-pointer shrink-0 bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
             >
               <span id="master-match-icon" class="w-5 h-5 rounded-md border-2 border-slate-300 flex items-center justify-center transition-colors">
                 <!-- Check icon injected dynamically -->
@@ -382,13 +386,13 @@
           <!-- Filter Tabs (All / Pending / Matched) -->
           <div class="flex items-center justify-between gap-2 mb-3 no-print">
             <div class="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200/80 text-xs font-semibold">
-              <button type="button" onclick="setChecklistFilter('all')" id="filter-all-btn" class="px-3 py-1.5 rounded-lg bg-white text-slate-900 shadow-2xs transition cursor-pointer">
+              <button type="button" onclick="setChecklistFilter('all')" id="filter-all-btn" class="px-3.5 py-2 rounded-lg bg-white text-slate-900 shadow-sm transition cursor-pointer">
                 All
               </button>
-              <button type="button" onclick="setChecklistFilter('pending')" id="filter-pending-btn" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
+              <button type="button" onclick="setChecklistFilter('pending')" id="filter-pending-btn" class="px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
                 Pending
               </button>
-              <button type="button" onclick="setChecklistFilter('matched')" id="filter-matched-btn" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
+              <button type="button" onclick="setChecklistFilter('matched')" id="filter-matched-btn" class="px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
                 Matched
               </button>
             </div>
@@ -404,11 +408,11 @@
           <div class="mt-5 pt-4 border-t border-slate-200 space-y-3 no-print">
             <div class="flex flex-wrap items-center gap-1.5">
               <span class="text-xs font-semibold text-slate-400 mr-1">Quick Add:</span>
-              <button type="button" onclick="quickAddChecklistItem('AC Remote')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ AC Remote</button>
-              <button type="button" onclick="quickAddChecklistItem('Geyser / Water Heater')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ Geyser</button>
-              <button type="button" onclick="quickAddChecklistItem('Wardrobe Keys')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ Wardrobe Keys</button>
-              <button type="button" onclick="quickAddChecklistItem('Mailbox / EB Box Key')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ Mailbox Key</button>
-              <button type="button" onclick="quickAddChecklistItem('Chimney / Hob Check')" class="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ Chimney / Hob</button>
+              <button type="button" onclick="quickAddChecklistItem('AC Remote')" class="chip px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ AC Remote</button>
+              <button type="button" onclick="quickAddChecklistItem('Geyser / Water Heater')" class="chip px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ Geyser</button>
+              <button type="button" onclick="quickAddChecklistItem('Wardrobe Keys')" class="chip px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ Wardrobe Keys</button>
+              <button type="button" onclick="quickAddChecklistItem('Mailbox / EB Box Key')" class="chip px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ Mailbox Key</button>
+              <button type="button" onclick="quickAddChecklistItem('Chimney / Hob Check')" class="chip px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 border border-slate-200/80 transition cursor-pointer">+ Chimney / Hob</button>
             </div>
 
             <div class="flex flex-col sm:flex-row gap-2.5">
@@ -417,7 +421,7 @@
                 inputmode="text"
                 id="new-checklist-item-input"
                 placeholder="Or type custom action item (e.g., Balcony Door Key, Wi-Fi Router)..."
-                onkeydown="if(event.key === 'Enter') addChecklistItem()"
+                enterkeyhint="done" onkeydown="if(event.key === 'Enter') addChecklistItem()"
                 class="flex-1 min-w-0 w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm text-slate-800 transition"
               />
               <button
@@ -438,904 +442,691 @@
     </div>
   </main>
 
+  <!-- Math helper bar: phone number keypads have no + - x / keys -->
+  <div id="math-bar" class="no-print" aria-label="Math keys">
+    <button type="button" data-ins="+" aria-label="plus">+</button>
+    <button type="button" data-ins="-" aria-label="minus">&minus;</button>
+    <button type="button" data-ins="*" aria-label="multiply">&times;</button>
+    <button type="button" data-ins="/" aria-label="divide">&divide;</button>
+    <button type="button" data-ins="(" aria-label="open bracket">(</button>
+    <button type="button" data-ins=")" aria-label="close bracket">)</button>
+    <button type="button" data-ins="%" aria-label="percent">%</button>
+    <button type="button" data-back="1" aria-label="backspace">&#9003;</button>
+    <button type="button" class="done" data-done="1">Done</button>
+  </div>
+
   <script>
     // =========================================================================
-    // 1. STATE & PRESET DEFINITIONS
+    // 1. STATE
     // =========================================================================
-    const OWNER_CREDIT_PRESETS = [
-      'Prorated Unused Rent Refund',
-      'Advance Maintenance Credit',
-      'Tenant-Paid Plumbing / Electrical Repair',
-      'Appliance / Fixture Reimbursement',
-      'Custom Owner Credit'
-    ];
+    const STORE_KEY = 'moveout-settlement-v1';   // namespaced: never touches other apps' storage
 
-    const DEDUCTION_PRESETS = [
-      'EB Bill (Electricity)',
-      'PNG Gas',
-      'Painting (3BHK)',
-      'Deep Cleaning',
-      'Maintenance Dues',
-      'Damages / Repairs',
-      'Water Charges',
-      'Custom Expense'
-    ];
+    const KINDS = {
+      credit: {
+        listId: 'credits-list',
+        presets: ['Prorated Unused Rent Refund', 'Advance Maintenance Credit', 'Tenant-Paid Plumbing / Electrical Repair', 'Appliance / Fixture Reimbursement', 'Custom Owner Credit'],
+        custom: 'Custom Owner Credit',
+        selectPh: 'Select reason...', customPh: 'Type reason...', amtLabel: 'Credit Amount', amtPh: '0 or 500+200',
+        row: 'bg-emerald-50/50 border-emerald-200/80', field: 'border-emerald-200 focus:ring-emerald-500/30 focus:border-emerald-500',
+        lbl: 'text-emerald-700/80', amtText: 'text-emerald-800', sym: 'text-emerald-700',
+        prev: 'text-emerald-800 bg-emerald-100 border-emerald-200', remove: 'Remove credit item'
+      },
+      deduction: {
+        listId: 'deductions-list',
+        presets: ['EB Bill (Electricity)', 'PNG Gas', 'Painting (3BHK)', 'Deep Cleaning', 'Maintenance Dues', 'Damages / Repairs', 'Water Charges', 'Custom Expense'],
+        custom: 'Custom Expense',
+        selectPh: 'Select deduction...', customPh: 'Type deduction...', amtLabel: 'Deduction Amount', amtPh: '0 or 1500+450',
+        row: 'bg-slate-50 border-slate-200/90', field: 'border-slate-200 focus:ring-indigo-500/30 focus:border-indigo-500',
+        lbl: 'text-slate-500', amtText: 'text-slate-900', sym: 'text-slate-500',
+        prev: 'text-indigo-700 bg-indigo-50 border-indigo-200', remove: 'Remove deduction item'
+      }
+    };
 
-    function getDefaultCredits() {
-      return [];
-    }
+    const defaultCredits = () => [];
+    const defaultDeductions = () => ['EB Bill (Electricity)', 'PNG Gas', 'Painting (3BHK)', 'Deep Cleaning']
+      .map((c, i) => ({ id: 'ded-' + (i + 1), category: c, customLabel: '', amount: '' }));
+    const defaultChecklist = () => ['Fan Remote', 'Main Door Keys', 'Individual Keys of 3 Bedrooms', '2 Bathroom Keys', 'MLCP Access Cards']
+      .map((l, i) => ({ id: 'chk-' + (i + 1), label: l, matched: false, notes: '' }));
 
-    function getDefaultDeductions() {
-      return [
-        { id: 'ded-1', category: 'EB Bill (Electricity)', customLabel: '', amount: '', isDefault: true },
-        { id: 'ded-2', category: 'PNG Gas', customLabel: '', amount: '', isDefault: true },
-        { id: 'ded-3', category: 'Painting (3BHK)', customLabel: '', amount: '', isDefault: true },
-        { id: 'ded-4', category: 'Deep Cleaning', customLabel: '', amount: '', isDefault: true }
-      ];
-    }
-
-    function getDefaultChecklist() {
-      return [
-        { id: 'chk-1', label: 'Fan Remote', matched: false, notes: '' },
-        { id: 'chk-2', label: 'Main Door Keys', matched: false, notes: '' },
-        { id: 'chk-3', label: 'Individual Keys of 3 Bedrooms', matched: false, notes: '' },
-        { id: 'chk-4', label: '2 Bathroom Keys', matched: false, notes: '' },
-        { id: 'chk-5', label: 'MLCP Access Cards', matched: false, notes: '' }
-      ];
-    }
-
-    let ownerCredits = getDefaultCredits();
-    let deductions = getDefaultDeductions();
-    let checklist = getDefaultChecklist();
+    let ownerCredits = defaultCredits();
+    let deductions = defaultDeductions();
+    let checklist = defaultChecklist();
     let checklistFilter = 'all';
 
+    const listFor = (kind) => (kind === 'credit' ? ownerCredits : deductions);
+    const $ = (id) => document.getElementById(id);
+    const uid = (p) => p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
     // =========================================================================
-    // 2. UTILITY FUNCTIONS (FORMATTERS, MATH EVALUATOR, ESCAPING, TOAST)
+    // 2. PERSISTENCE (survives tab reloads when you switch to WhatsApp & back)
     // =========================================================================
+    let saveTimer = null;
+    function saveState() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveNow, 250);
+    }
+    function saveNow() {
+      try {
+        localStorage.setItem(STORE_KEY, JSON.stringify({
+          tenant: $('tenant-name').value, unit: $('unit-number').value, date: $('moveout-date').value,
+          deposit: $('deposit-input').value, ownerCredits, deductions, checklist, checklistFilter
+        }));
+      } catch (e) { /* storage blocked/full: app still works */ }
+    }
+    function loadState() {
+      try {
+        const d = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+        if (!d) return;
+        $('tenant-name').value = d.tenant || '';
+        $('unit-number').value = d.unit || '';
+        $('moveout-date').value = d.date || '';
+        $('deposit-input').value = d.deposit || '';
+        if (Array.isArray(d.ownerCredits)) ownerCredits = d.ownerCredits;
+        if (Array.isArray(d.deductions)) deductions = d.deductions;
+        if (Array.isArray(d.checklist)) checklist = d.checklist;
+        if (['all', 'pending', 'matched'].includes(d.checklistFilter)) checklistFilter = d.checklistFilter;
+      } catch (e) { /* corrupt data: start clean */ }
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
+    window.addEventListener('pagehide', saveNow);
+
+    // =========================================================================
+    // 3. UTILITIES
+    // =========================================================================
+    const round2 = (n) => Math.round(n * 100) / 100;
     function formatINR(num) {
       const val = Number(num) || 0;
       return '₹' + val.toLocaleString('en-IN', { maximumFractionDigits: 2 });
     }
-
-    /**
-     * Safely evaluates arithmetic expressions containing +, -, *, /, %, and ()
-     * Returns { value: number, isExpression: boolean, valid: boolean }
-     */
-    function evaluateAmountInput(rawInput) {
-      if (rawInput === null || rawInput === undefined) {
-        return { value: 0, isExpression: false, valid: true };
-      }
-      // Normalize visual math symbols (×, ÷, −) and strip commas/spaces/currency symbol
-      let expr = String(rawInput)
-        .replace(/[₹,\s]/g, '')
-        .replace(/×/g, '*')
-        .replace(/÷/g, '/')
-        .replace(/[−–—]/g, '-');
-
-      if (!expr) {
-        return { value: 0, isExpression: false, valid: true };
-      }
-
-      // Check if user entered any arithmetic operator after the first character
-      const hasOperator = /[+\-*/%()]/.test(expr.slice(1)) || /^[*(/%]/.test(expr);
-
-      // Plain number check
-      if (!hasOperator) {
-        const num = parseFloat(expr);
-        return {
-          value: isNaN(num) ? 0 : Math.max(0, num),
-          isExpression: false,
-          valid: !isNaN(num)
-        };
-      }
-
-      // Strip trailing incomplete operators while user is mid-typing (e.g., "1500+" -> "1500")
-      let cleanExpr = expr.replace(/[+\-*/%.(]+$/, '');
-      if (!cleanExpr) {
-        return { value: 0, isExpression: true, valid: false };
-      }
-
-      // Auto-close unmatched opening parentheses while typing (e.g., "(500+200" -> "(500+200)")
-      const openParens = (cleanExpr.match(/\(/g) || []).length;
-      const closeParens = (cleanExpr.match(/\)/g) || []).length;
-      if (openParens > closeParens) {
-        cleanExpr += ')'.repeat(openParens - closeParens);
-      }
-
-      // Strict whitelist validation: only digits, decimal points, operators, and parentheses
-      if (!/^[0-9+\-*/%.()]+$/.test(cleanExpr)) {
-        return { value: 0, isExpression: true, valid: false };
-      }
-
-      try {
-        // Safe evaluation of pure math tokens
-        const result = Function('"use strict"; return (' + cleanExpr + ');')();
-        if (typeof result === 'number' && isFinite(result)) {
-          const rounded = Math.round(result * 100) / 100;
-          return {
-            value: Math.max(0, rounded),
-            isExpression: true,
-            valid: true
-          };
-        }
-      } catch (e) {
-        // Incomplete expression mid-typing
-      }
-      return { value: 0, isExpression: true, valid: false };
-    }
-
-    function formatEvaluatedField(inputEl, isCreditOrDeduction) {
-      if (!inputEl) return;
-      const raw = inputEl.value.trim();
-      if (!raw) return;
-      const parsed = evaluateAmountInput(raw);
-      if (parsed.valid && parsed.isExpression) {
-        inputEl.value = parsed.value;
-        if (!isCreditOrDeduction) {
-          recalculateFinances();
-        }
-      }
-    }
-
     function escapeHtml(str) {
       if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function formatDate(iso) {
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+      if (!m) return iso || '';
+      return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     }
 
     let toastTimeout = null;
     function showToast(msg) {
-      const toast = document.getElementById('toast');
-      const msgEl = document.getElementById('toast-message');
-      if (!toast || !msgEl) return;
-      msgEl.textContent = msg;
+      const toast = $('toast');
+      $('toast-message').textContent = msg;
       toast.classList.remove('translate-y-24', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
       clearTimeout(toastTimeout);
       toastTimeout = setTimeout(() => {
         toast.classList.add('translate-y-24', 'opacity-0');
         toast.classList.remove('translate-y-0', 'opacity-100');
-      }, 2800);
+      }, 2600);
     }
 
-    function getEffectiveCreditLabel(item) {
-      const cat = (item.category || '').trim();
-      const custom = (item.customLabel || '').trim();
-      if (cat === 'Custom Owner Credit') return custom || 'Custom Owner Credit';
-      return cat || custom || 'Owner Credit';
+    /**
+     * Safe arithmetic parser (no eval / Function, so it also works under strict CSP).
+     * Supports + - * / ( ) and %. "10%" = 0.1 ; "5000*10%" = 500 ; "5000+10%" = 5500.
+     */
+    function parseMath(src) {
+      let i = 0;
+      const fail = () => { throw new Error('bad'); };
+      function number() {
+        const m = /^(\d+\.?\d*|\.\d+)/.exec(src.slice(i));
+        if (!m) fail();
+        i += m[0].length;
+        return parseFloat(m[0]);
+      }
+      function primary() {
+        let v;
+        if (src[i] === '(') { i++; v = expr().v; if (src[i] !== ')') fail(); i++; }
+        else v = number();
+        let pct = false;
+        while (src[i] === '%') { v /= 100; pct = true; i++; }
+        return { v, pct };
+      }
+      function factor() {
+        if (src[i] === '-') { i++; const f = factor(); return { v: -f.v, pct: false }; }
+        if (src[i] === '+') { i++; return factor(); }
+        return primary();
+      }
+      function term() {
+        let l = factor();
+        while (src[i] === '*' || src[i] === '/') {
+          const op = src[i++]; const r = factor();
+          l = { v: op === '*' ? l.v * r.v : l.v / r.v, pct: false };
+        }
+        return l;
+      }
+      function expr() {
+        let l = term();
+        while (src[i] === '+' || src[i] === '-') {
+          const op = src[i++]; const r = term();
+          const rv = r.pct ? l.v * r.v : r.v;           // "5000+10%" -> 5500
+          l = { v: op === '+' ? l.v + rv : l.v - rv, pct: false };
+        }
+        return l;
+      }
+      const out = expr();
+      if (i !== src.length) fail();
+      return out.v;
     }
 
-    function getEffectiveDeductionLabel(item) {
-      const cat = (item.category || '').trim();
-      const custom = (item.customLabel || '').trim();
-      if (cat === 'Custom Expense') return custom || 'Custom Expense';
-      return cat || custom || 'Deduction';
+    /** Returns { value, isExpression, valid } ; value is never negative. */
+    function evaluateAmountInput(rawInput) {
+      if (rawInput === null || rawInput === undefined) return { value: 0, isExpression: false, valid: true };
+      let expr = String(rawInput).replace(/[₹,\s]/g, '').replace(/[×xX]/g, '*').replace(/÷/g, '/').replace(/[−–—]/g, '-');
+      if (!expr) return { value: 0, isExpression: false, valid: true };
+
+      if (/^-?(\d+\.?\d*|\.\d+)$/.test(expr)) {
+        return { value: Math.max(0, parseFloat(expr)), isExpression: false, valid: true };
+      }
+      if (!/^[0-9+\-*/%.()]+$/.test(expr)) return { value: 0, isExpression: /[+*/%()]/.test(expr), valid: false };
+
+      // forgive a half-typed expression: "1500+" -> "1500", "(500+200" -> "(500+200)"
+      expr = expr.replace(/[+\-*/.(]+$/, '');
+      if (!expr) return { value: 0, isExpression: true, valid: false };
+      const open = (expr.match(/\(/g) || []).length, close = (expr.match(/\)/g) || []).length;
+      if (open > close) expr += ')'.repeat(open - close);
+      try {
+        const r = parseMath(expr);
+        if (typeof r === 'number' && isFinite(r)) return { value: Math.max(0, round2(r)), isExpression: true, valid: true };
+      } catch (e) { /* incomplete */ }
+      return { value: 0, isExpression: true, valid: false };
+    }
+
+    function creditLabel(item) {
+      const cat = (item.category || '').trim(), custom = (item.customLabel || '').trim();
+      return cat === KINDS.credit.custom ? (custom || cat) : (cat || custom || 'Owner Credit');
+    }
+    function deductionLabel(item) {
+      const cat = (item.category || '').trim(), custom = (item.customLabel || '').trim();
+      return cat === KINDS.deduction.custom ? (custom || cat) : (cat || custom || 'Deduction');
+    }
+
+    function computeTotals() {
+      const deposit = evaluateAmountInput($('deposit-input').value);
+      const credits = [], deds = [];
+      ownerCredits.forEach(it => { const a = evaluateAmountInput(it.amount).value; if (a > 0) credits.push({ label: creditLabel(it), amount: a }); });
+      deductions.forEach(it => { const a = evaluateAmountInput(it.amount).value; if (a > 0) deds.push({ label: deductionLabel(it), amount: a }); });
+      const totalCredits = round2(credits.reduce((s, c) => s + c.amount, 0));
+      const totalDeductions = round2(deds.reduce((s, c) => s + c.amount, 0));
+      return { deposit: deposit.value, depositParsed: deposit, credits, deds, totalCredits, totalDeductions,
+               net: round2(deposit.value + totalCredits - totalDeductions) };
     }
 
     // =========================================================================
-    // 3. OWNER CREDITS (+) & DEDUCTIONS (-) RENDERING & HANDLERS
+    // 4. CREDIT / DEDUCTION ROWS  (event delegation, no re-render while typing)
     // =========================================================================
-    function renderCredits() {
-      const container = document.getElementById('credits-list');
-      if (!container) return;
-      container.innerHTML = '';
+    function rowHtml(kind, item) {
+      const k = KINDS[kind];
+      const isCustom = item.category === k.custom;
+      const parsed = evaluateAmountInput(item.amount);
+      const showPrev = parsed.isExpression && parsed.valid;
+      const opts = k.presets.map(p => `<option value="${escapeHtml(p)}" ${item.category === p ? 'selected' : ''}>${escapeHtml(p)}</option>`).join('');
+      return `
+        <div class="flex items-start gap-2">
+          <div class="flex-1 min-w-0 space-y-2">
+            <select data-field="category" aria-label="${escapeHtml(k.selectPh)}" class="w-full min-w-0 px-3 py-2.5 rounded-lg border ${k.field} bg-white focus:outline-none focus:ring-2 text-sm font-semibold text-slate-800">
+              <option value="" ${item.category ? '' : 'selected'} disabled>${escapeHtml(k.selectPh)}</option>
+              ${opts}
+            </select>
+            ${isCustom ? `<input type="text" data-field="customLabel" value="${escapeHtml(item.customLabel)}" placeholder="${escapeHtml(k.customPh)}" autocomplete="off" enterkeyhint="done"
+              class="w-full min-w-0 px-3 py-2.5 rounded-lg border ${k.field} bg-white focus:outline-none focus:ring-2 text-sm text-slate-800" />` : ''}
+          </div>
+          <button type="button" data-action="remove" aria-label="${k.remove}" title="${k.remove}"
+            class="tap-target p-2.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition shrink-0 cursor-pointer no-print inline-flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-xs font-medium ${k.lbl}">${k.amtLabel}</span>
+            <span data-role="preview" class="${showPrev ? '' : 'hidden'} text-xs font-bold ${k.prev} border px-2 py-0.5 rounded-md tabular-nums">= ${formatINR(parsed.value)}</span>
+          </div>
+          <div class="relative w-40 sm:w-44 shrink-0 flex items-center">
+            <span class="absolute left-3 ${k.sym} font-bold text-sm">₹</span>
+            <input type="text" inputmode="decimal" data-field="amount" data-math autocomplete="off" enterkeyhint="done"
+              value="${escapeHtml(item.amount)}" placeholder="${k.amtPh}" aria-label="${k.amtLabel}"
+              class="w-full pl-7 pr-3 py-2.5 rounded-lg border ${k.field} bg-white focus:outline-none focus:ring-2 text-sm font-bold ${k.amtText} text-right tabular-nums" />
+          </div>
+        </div>`;
+    }
 
-      ownerCredits.forEach((item) => {
-        const listId = `credit-presets-${item.id}`;
-        const parsed = evaluateAmountInput(item.amount);
-        const showPreview = parsed.isExpression && parsed.valid;
+    function renderList(kind, recalc = true) {
+      const k = KINDS[kind], c = $(k.listId);
+      c.innerHTML = '';
+      listFor(kind).forEach(item => {
         const row = document.createElement('div');
-        row.className = 'p-3 rounded-xl bg-emerald-50/50 border border-emerald-200/80 space-y-2.5';
-
-        row.innerHTML = `
-          <div class="flex items-center gap-2">
-            <div class="flex-1 min-w-0">
-              <input
-                type="text"
-                inputmode="text"
-                list="${listId}"
-                value="${escapeHtml(item.category)}"
-                placeholder="Select or type reason..."
-                oninput="updateCreditCategory('${item.id}', this.value)"
-                class="w-full min-w-0 px-3 py-2 rounded-lg border border-emerald-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 text-sm font-semibold text-slate-800 transition"
-              />
-              <datalist id="${listId}">
-                ${OWNER_CREDIT_PRESETS.map(p => `<option value="${escapeHtml(p)}"></option>`).join('')}
-              </datalist>
-            </div>
-
-            <button
-              type="button"
-              onclick="removeCreditRow('${item.id}')"
-              title="Remove credit item"
-              class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition shrink-0 cursor-pointer no-print"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-
-          <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="text-xs font-medium text-emerald-700/80">Credit Amount</span>
-              <span id="credit-preview-${item.id}" class="${showPreview ? '' : 'hidden'} text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md tabular-nums">
-                = ${formatINR(parsed.value)}
-              </span>
-            </div>
-            <div class="relative w-40 sm:w-44 shrink-0 flex items-center">
-              <span class="absolute left-3 text-emerald-700 font-bold text-sm">₹</span>
-              <input
-                type="text"
-                inputmode="decimal"
-                value="${escapeHtml(item.amount)}"
-                placeholder="0 or 500+200"
-                oninput="updateCreditAmount('${item.id}', this.value)"
-                onblur="commitCreditExpression('${item.id}')"
-                onkeydown="if(event.key==='Enter'){ commitCreditExpression('${item.id}'); }"
-                class="w-full pl-7 pr-3 py-2 rounded-lg border border-emerald-200 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 text-sm font-bold text-emerald-800 text-right tabular-nums transition"
-              />
-            </div>
-          </div>
-        `;
-        container.appendChild(row);
+        row.dataset.id = item.id;
+        row.className = `p-3 rounded-xl border ${k.row} space-y-2.5`;
+        row.innerHTML = rowHtml(kind, item);
+        c.appendChild(row);
       });
-
-      recalculateFinances();
+      if (recalc) recalculateFinances();
     }
+    const renderCredits = () => renderList('credit');
+    const renderDeductions = () => renderList('deduction');
 
     function addCreditRow() {
-      ownerCredits.push({
-        id: 'crd-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-        category: '',
-        customLabel: '',
-        amount: ''
-      });
-      renderCredits();
+      ownerCredits.push({ id: uid('crd'), category: '', customLabel: '', amount: '' });
+      renderList('credit'); saveState();
+      const rows = $('credits-list').children; const last = rows[rows.length - 1];
+      if (last) last.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
-
-    function updateCreditCategory(id, val) {
-      const item = ownerCredits.find(c => c.id === id);
-      if (item) {
-        item.category = val;
-        recalculateFinances();
-      }
-    }
-
-    function updateCreditAmount(id, val) {
-      const item = ownerCredits.find(c => c.id === id);
-      if (item) {
-        item.amount = val;
-        const previewEl = document.getElementById(`credit-preview-${id}`);
-        if (previewEl) {
-          const parsed = evaluateAmountInput(val);
-          if (parsed.isExpression && parsed.valid) {
-            previewEl.textContent = `= ${formatINR(parsed.value)}`;
-            previewEl.classList.remove('hidden');
-          } else {
-            previewEl.classList.add('hidden');
-          }
-        }
-        recalculateFinances();
-      }
-    }
-
-    function commitCreditExpression(id) {
-      const item = ownerCredits.find(c => c.id === id);
-      if (!item) return;
-      const parsed = evaluateAmountInput(item.amount);
-      if (parsed.valid && parsed.isExpression) {
-        item.amount = String(parsed.value);
-        renderCredits();
-      }
-    }
-
-    function removeCreditRow(id) {
-      ownerCredits = ownerCredits.filter(c => c.id !== id);
-      renderCredits();
-    }
-
-    function renderDeductions() {
-      const container = document.getElementById('deductions-list');
-      if (!container) return;
-      container.innerHTML = '';
-
-      deductions.forEach((item) => {
-        const listId = `deduction-presets-${item.id}`;
-        const parsed = evaluateAmountInput(item.amount);
-        const showPreview = parsed.isExpression && parsed.valid;
-        const row = document.createElement('div');
-        row.className = 'p-3 rounded-xl bg-slate-50 border border-slate-200/90 space-y-2.5';
-
-        row.innerHTML = `
-          <div class="flex items-center gap-2">
-            <div class="flex-1 min-w-0">
-              <input
-                type="text"
-                inputmode="text"
-                list="${listId}"
-                value="${escapeHtml(item.category)}"
-                placeholder="Select or type deduction..."
-                oninput="updateDeductionCategory('${item.id}', this.value)"
-                class="w-full min-w-0 px-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm font-semibold text-slate-800 transition"
-              />
-              <datalist id="${listId}">
-                ${DEDUCTION_PRESETS.map(p => `<option value="${escapeHtml(p)}"></option>`).join('')}
-              </datalist>
-            </div>
-
-            <button
-              type="button"
-              onclick="removeDeductionRow('${item.id}')"
-              title="Remove deduction item"
-              class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition shrink-0 cursor-pointer no-print"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-
-          <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="text-xs font-medium text-slate-500">Deduction Amount</span>
-              <span id="deduction-preview-${item.id}" class="${showPreview ? '' : 'hidden'} text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md tabular-nums">
-                = ${formatINR(parsed.value)}
-              </span>
-            </div>
-            <div class="relative w-40 sm:w-44 shrink-0 flex items-center">
-              <span class="absolute left-3 text-slate-500 font-bold text-sm">₹</span>
-              <input
-                type="text"
-                inputmode="decimal"
-                value="${escapeHtml(item.amount)}"
-                placeholder="0 or 1500+450"
-                oninput="updateDeductionAmount('${item.id}', this.value)"
-                onblur="commitDeductionExpression('${item.id}')"
-                onkeydown="if(event.key==='Enter'){ commitDeductionExpression('${item.id}'); }"
-                class="w-full pl-7 pr-3 py-2 rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-sm font-bold text-slate-900 text-right tabular-nums transition"
-              />
-            </div>
-          </div>
-        `;
-        container.appendChild(row);
-      });
-
-      recalculateFinances();
-    }
-
     function addDeductionRow() {
-      deductions.push({
-        id: 'ded-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-        category: '',
-        customLabel: '',
-        amount: '',
-        isDefault: false
-      });
-      renderDeductions();
+      deductions.push({ id: uid('ded'), category: '', customLabel: '', amount: '' });
+      renderList('deduction'); saveState();
+      const rows = $('deductions-list').children; const last = rows[rows.length - 1];
+      if (last) last.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 
-    function updateDeductionCategory(id, val) {
-      const item = deductions.find(d => d.id === id);
-      if (item) {
-        item.category = val;
-        recalculateFinances();
-      }
+    function setPreview(el, parsed) {
+      if (!el) return;
+      if (parsed.isExpression && parsed.valid) { el.textContent = '= ' + formatINR(parsed.value); el.classList.remove('hidden'); }
+      else el.classList.add('hidden');
     }
 
-    function updateDeductionAmount(id, val) {
-      const item = deductions.find(d => d.id === id);
-      if (item) {
-        item.amount = val;
-        const previewEl = document.getElementById(`deduction-preview-${id}`);
-        if (previewEl) {
-          const parsed = evaluateAmountInput(val);
-          if (parsed.isExpression && parsed.valid) {
-            previewEl.textContent = `= ${formatINR(parsed.value)}`;
-            previewEl.classList.remove('hidden');
-          } else {
-            previewEl.classList.add('hidden');
-          }
-        }
-        recalculateFinances();
-      }
-    }
-
-    function commitDeductionExpression(id) {
-      const item = deductions.find(d => d.id === id);
-      if (!item) return;
-      const parsed = evaluateAmountInput(item.amount);
+    function commitAmountField(input, item) {
+      const parsed = evaluateAmountInput(input.value);
       if (parsed.valid && parsed.isExpression) {
-        item.amount = String(parsed.value);
-        renderDeductions();
+        input.value = String(parsed.value);
+        if (item) item.amount = input.value;
+        saveState(); recalculateFinances();
       }
     }
 
-    function removeDeductionRow(id) {
-      deductions = deductions.filter(d => d.id !== id);
-      renderDeductions();
+    function bindList(kind) {
+      const c = $(KINDS[kind].listId);
+      const find = (el) => { const row = el.closest('[data-id]'); return row ? listFor(kind).find(x => x.id === row.dataset.id) : null; };
+
+      c.addEventListener('input', (e) => {
+        const item = find(e.target); if (!item) return;
+        const f = e.target.dataset.field;
+        if (f === 'amount') {
+          item.amount = e.target.value;
+          setPreview(e.target.closest('[data-id]').querySelector('[data-role="preview"]'), evaluateAmountInput(item.amount));
+        } else if (f === 'customLabel') item.customLabel = e.target.value;
+        else return;
+        recalculateFinances(); saveState();
+      });
+      c.addEventListener('change', (e) => {
+        if (e.target.dataset.field !== 'category') return;
+        const item = find(e.target); if (!item) return;
+        item.category = e.target.value;
+        renderList(kind); saveState();
+      });
+      c.addEventListener('focusout', (e) => {
+        if (e.target.dataset.field !== 'amount') return;
+        commitAmountField(e.target, find(e.target));          // updates in place: no re-render, no lost focus
+        setPreview(e.target.closest('[data-id]')?.querySelector('[data-role="preview"]'), { isExpression: false, valid: true });
+      });
+      c.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && e.target.matches('input')) { e.preventDefault(); e.target.blur(); }
+      });
+      c.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action="remove"]'); if (!btn) return;
+        const row = btn.closest('[data-id]'); if (!row) return;
+        if (kind === 'credit') ownerCredits = ownerCredits.filter(x => x.id !== row.dataset.id);
+        else deductions = deductions.filter(x => x.id !== row.dataset.id);
+        renderList(kind); saveState();
+      });
     }
 
     function recalculateFinances() {
-      const depositInput = document.getElementById('deposit-input');
-      const depositParsed = evaluateAmountInput(depositInput.value);
-      const deposit = depositParsed.value;
+      const t = computeTotals();
+      setPreview($('deposit-calc-preview'), t.depositParsed);
 
-      const depositPreview = document.getElementById('deposit-calc-preview');
-      if (depositPreview) {
-        if (depositParsed.isExpression && depositParsed.valid) {
-          depositPreview.textContent = `= ${formatINR(deposit)}`;
-          depositPreview.classList.remove('hidden');
-        } else {
-          depositPreview.classList.add('hidden');
-        }
-      }
+      $('summary-deposit').textContent = formatINR(t.deposit);
+      $('summary-deductions').textContent = t.totalDeductions > 0 ? `- ${formatINR(t.totalDeductions)}` : '₹0';
 
-      let totalCredits = 0;
-      const activeCredits = [];
-      ownerCredits.forEach((item) => {
-        const amt = evaluateAmountInput(item.amount).value;
-        if (amt > 0) {
-          totalCredits += amt;
-          activeCredits.push({
-            label: getEffectiveCreditLabel(item),
-            amount: amt
-          });
-        }
-      });
-
-      let totalDeductions = 0;
-      const activeDeductions = [];
-      deductions.forEach((item) => {
-        const amt = evaluateAmountInput(item.amount).value;
-        if (amt > 0) {
-          totalDeductions += amt;
-          activeDeductions.push({
-            label: getEffectiveDeductionLabel(item),
-            amount: amt
-          });
-        }
-      });
-
-      const netBalance = deposit + totalCredits - totalDeductions;
-
-      // Update Summary Values
-      document.getElementById('summary-deposit').textContent = formatINR(deposit);
-      document.getElementById('summary-deductions').textContent = totalDeductions > 0 ? `- ${formatINR(totalDeductions)}` : '₹0';
-
-      // Update Credits Breakdown
-      const creditsSection = document.getElementById('summary-credits-section');
-      const creditsBreakdown = document.getElementById('summary-credits-breakdown');
-      if (activeCredits.length > 0) {
-        creditsSection.classList.remove('hidden');
-        creditsBreakdown.innerHTML = activeCredits.map(c => `
-          <div class="flex justify-between items-center text-slate-700">
+      const cs = $('summary-credits-section'), cb = $('summary-credits-breakdown');
+      if (t.credits.length) {
+        cs.classList.remove('hidden');
+        cb.innerHTML = t.credits.map(c => `
+          <div class="flex justify-between items-center gap-2 text-slate-700">
             <span class="truncate pr-2">${escapeHtml(c.label)}</span>
             <span class="font-semibold text-emerald-700 tabular-nums shrink-0">+ ${formatINR(c.amount)}</span>
-          </div>
-        `).join('');
-        document.getElementById('summary-credits-total').textContent = `+ ${formatINR(totalCredits)}`;
-      } else {
-        creditsSection.classList.add('hidden');
-        creditsBreakdown.innerHTML = '';
-      }
+          </div>`).join('');
+        $('summary-credits-total').textContent = `+ ${formatINR(t.totalCredits)}`;
+      } else { cs.classList.add('hidden'); cb.innerHTML = ''; }
 
-      // Update Deductions Breakdown
-      const deductionsBreakdown = document.getElementById('summary-deductions-breakdown');
-      if (activeDeductions.length > 0) {
-        deductionsBreakdown.innerHTML = activeDeductions.map(d => `
-          <div class="flex justify-between items-center text-slate-700">
+      $('summary-deductions-breakdown').innerHTML = t.deds.length
+        ? t.deds.map(d => `
+          <div class="flex justify-between items-center gap-2 text-slate-700">
             <span class="truncate pr-2">${escapeHtml(d.label)}</span>
             <span class="font-semibold text-rose-600 tabular-nums shrink-0">- ${formatINR(d.amount)}</span>
-          </div>
-        `).join('');
-      } else {
-        deductionsBreakdown.innerHTML = `<div class="text-xs text-slate-400 italic">No deductions entered</div>`;
-      }
+          </div>`).join('')
+        : '<div class="text-xs text-slate-400 italic">No deductions entered</div>';
 
-      // Update Hero Net Amount Card
-      const summaryCard = document.getElementById('summary-card');
-      const badge = document.getElementById('settlement-badge');
-      const netDisplay = document.getElementById('net-amount-display');
-      const netSubtext = document.getElementById('net-subtext');
-
-      if (netBalance >= 0) {
-        summaryCard.className = 'rounded-2xl p-6 shadow-sm border transition-colors duration-300 bg-emerald-50/80 border-emerald-200 print-shadow-none';
+      const card = $('summary-card'), badge = $('settlement-badge'), disp = $('net-amount-display'), sub = $('net-subtext');
+      if (t.net >= 0) {
+        card.className = 'rounded-2xl p-5 sm:p-6 shadow-sm border transition-colors duration-300 bg-emerald-50/80 border-emerald-200 print-shadow-none';
         badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-emerald-100 text-emerald-800';
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Net Amount Owner Pays Tenant`;
-        netDisplay.className = 'text-3xl sm:text-4xl font-extrabold tracking-tight text-emerald-700 tabular-nums';
-        netDisplay.textContent = formatINR(netBalance);
-        netSubtext.className = 'text-xs text-emerald-700/80 mt-1 font-medium';
-        netSubtext.textContent = totalCredits > 0
-          ? 'Deposit + owner credits minus total deductions'
-          : 'Deposit minus total deductions';
+        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Net Amount Owner Pays Tenant';
+        disp.className = 'text-3xl sm:text-4xl font-extrabold tracking-tight text-emerald-700 tabular-nums break-words';
+        disp.textContent = formatINR(t.net);
+        sub.className = 'text-xs text-emerald-700/80 mt-1 font-medium';
+        sub.textContent = t.totalCredits > 0 ? 'Deposit + owner credits minus total deductions' : 'Deposit minus total deductions';
       } else {
-        summaryCard.className = 'rounded-2xl p-6 shadow-sm border transition-colors duration-300 bg-rose-50/80 border-rose-200 print-shadow-none';
+        card.className = 'rounded-2xl p-5 sm:p-6 shadow-sm border transition-colors duration-300 bg-rose-50/80 border-rose-200 print-shadow-none';
         badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-rose-100 text-rose-800';
-        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span> Balance Payable by Tenant to Owner`;
-        netDisplay.className = 'text-3xl sm:text-4xl font-extrabold tracking-tight text-rose-700 tabular-nums';
-        netDisplay.textContent = formatINR(Math.abs(netBalance));
-        netSubtext.className = 'text-xs text-rose-700/80 mt-1 font-medium';
-        netSubtext.textContent = 'Total deductions exceed deposit & credits';
+        badge.innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-500"></span> Balance Payable by Tenant to Owner';
+        disp.className = 'text-3xl sm:text-4xl font-extrabold tracking-tight text-rose-700 tabular-nums break-words';
+        disp.textContent = formatINR(Math.abs(t.net));
+        sub.className = 'text-xs text-rose-700/80 mt-1 font-medium';
+        sub.textContent = 'Total deductions exceed deposit & credits';
       }
     }
 
     // =========================================================================
-    // 4. HANDOVER CHECKLIST RENDERING & TOGGLES
+    // 5. HANDOVER CHECKLIST
     // =========================================================================
     function getChecklistItemIcon(label) {
-      const lower = (label || '').toLowerCase();
-      if (lower.includes('remote')) {
-        return `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="7" r="1"/><path stroke-linecap="round" d="M10 12h4M10 16h4"/></svg>`;
-      }
-      if (lower.includes('card') || lower.includes('mlcp') || lower.includes('access')) {
-        return `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M2 10h20M6 15h4"/></svg>`;
-      }
-      if (lower.includes('key') || lower.includes('door') || lower.includes('bedroom') || lower.includes('bathroom')) {
-        return `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>`;
-      }
-      return `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>`;
+      const l = (label || '').toLowerCase();
+      const svg = (inner) => `<svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">${inner}</svg>`;
+      if (l.includes('remote')) return svg('<rect x="7" y="2" width="10" height="20" rx="2"/><circle cx="12" cy="7" r="1"/><path stroke-linecap="round" d="M10 12h4M10 16h4"/>');
+      if (l.includes('card') || l.includes('mlcp') || l.includes('access')) return svg('<rect x="2" y="5" width="20" height="14" rx="2"/><path stroke-linecap="round" d="M2 10h20M6 15h4"/>');
+      if (l.includes('key') || l.includes('door') || l.includes('bedroom') || l.includes('bathroom')) return svg('<path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>');
+      return svg('<path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>');
     }
 
     function setChecklistFilter(filter) {
       checklistFilter = filter;
       ['all', 'pending', 'matched'].forEach((key) => {
-        const btn = document.getElementById(`filter-${key}-btn`);
+        const btn = $(`filter-${key}-btn`);
         if (!btn) return;
-        if (key === filter) {
-          btn.className = 'px-3 py-1.5 rounded-lg bg-white text-slate-900 shadow-2xs transition cursor-pointer';
-        } else {
-          btn.className = 'px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer';
-        }
+        btn.className = key === filter
+          ? 'px-3.5 py-2 rounded-lg bg-white text-slate-900 shadow-sm transition cursor-pointer'
+          : 'px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer';
+        btn.setAttribute('aria-pressed', key === filter ? 'true' : 'false');
       });
-      renderChecklist();
+      renderChecklist(); saveState();
     }
 
-    function applyQuickNote(id, noteText) {
-      const item = checklist.find(c => c.id === id);
-      if (!item) return;
-      item.notes = item.notes && item.notes.trim() && item.notes.trim() !== noteText
-        ? `${item.notes.trim()}, ${noteText}`
-        : noteText;
-      renderChecklist();
+    const QUICK_NOTES = [
+      ['All received & working', '+ All working', 'hover:bg-emerald-50 hover:text-emerald-700'],
+      ['Original handed over', '+ Original handed over', 'hover:bg-emerald-50 hover:text-emerald-700'],
+      ['1 key missing', '+ 1 missing', 'hover:bg-amber-50 hover:text-amber-700'],
+      ['Damaged / needs replacement', '+ Damaged', 'hover:bg-rose-50 hover:text-rose-700']
+    ];
+
+    function applyQuickNote(id, text) {
+      const item = checklist.find(c => c.id === id); if (!item) return;
+      const cur = (item.notes || '').trim();
+      if (!cur) item.notes = text;
+      else if (!cur.toLowerCase().includes(text.toLowerCase())) item.notes = `${cur}, ${text}`;
+      renderChecklist(); saveState();
     }
 
     function quickAddChecklistItem(label) {
-      const exists = checklist.some(c => c.label.toLowerCase() === label.toLowerCase());
-      if (exists) {
-        showToast(`"${label}" is already in the list`);
-        return;
-      }
-      checklist.push({
-        id: 'chk-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-        label,
-        matched: false,
-        notes: ''
-      });
-      renderChecklist();
-      showToast(`Added "${label}"`);
+      if (checklist.some(c => c.label.toLowerCase() === label.toLowerCase())) { showToast(`"${label}" is already in the list`); return; }
+      checklist.push({ id: uid('chk'), label, matched: false, notes: '' });
+      renderChecklist(); saveState(); showToast(`Added "${label}"`);
     }
 
     function renderChecklist() {
-      const container = document.getElementById('checklist-items-container');
-      container.innerHTML = '';
+      const c = $('checklist-items-container');
+      c.innerHTML = '';
+      const items = checklist.filter(i => checklistFilter === 'pending' ? !i.matched : checklistFilter === 'matched' ? i.matched : true);
 
-      const filteredItems = checklist.filter(item => {
-        if (checklistFilter === 'pending') return !item.matched;
-        if (checklistFilter === 'matched') return item.matched;
-        return true;
-      });
-
-      if (filteredItems.length === 0) {
-        container.innerHTML = `
-          <div class="py-8 px-4 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
-            <p class="text-sm font-medium text-slate-500">No ${checklistFilter !== 'all' ? checklistFilter : ''} handover items to display.</p>
-          </div>
-        `;
-        updateChecklistProgress();
-        return;
+      if (!items.length) {
+        c.innerHTML = `<div class="py-8 px-4 text-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50">
+          <p class="text-sm font-medium text-slate-500">No ${checklistFilter !== 'all' ? checklistFilter : ''} handover items to display.</p></div>`;
+        updateChecklistProgress(); return;
       }
 
-      filteredItems.forEach((item) => {
+      items.forEach((item) => {
+        const m = item.matched;
         const card = document.createElement('div');
-        card.className = item.matched
+        card.dataset.id = item.id;
+        card.className = m
           ? 'p-3.5 sm:p-4 rounded-2xl border border-emerald-200 bg-emerald-50/40 transition-all duration-200 space-y-3'
           : 'p-3.5 sm:p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-all duration-200 space-y-3';
-
-        const btnClasses = item.matched
-          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs hover:bg-emerald-700'
-          : 'bg-white text-slate-700 border-slate-300 hover:border-emerald-400 hover:text-emerald-700';
-
-        const badgeIconBg = item.matched
-          ? 'bg-emerald-100 text-emerald-700'
-          : 'bg-slate-200/70 text-slate-600';
-
-        const statusIconHtml = item.matched
-          ? `<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`
-          : `<span class="w-3.5 h-3.5 rounded-full border-2 border-slate-300 shrink-0"></span>`;
+        const btnClasses = m ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm hover:bg-emerald-700' : 'bg-white text-slate-700 border-slate-300 hover:border-emerald-400 hover:text-emerald-700';
+        const statusIcon = m
+          ? '<svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>'
+          : '<span class="w-3.5 h-3.5 rounded-full border-2 border-slate-300 shrink-0"></span>';
 
         card.innerHTML = `
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <div class="flex items-center gap-2.5 min-w-0">
-              <div class="w-8 h-8 rounded-xl ${badgeIconBg} flex items-center justify-center shrink-0 transition-colors">
-                ${getChecklistItemIcon(item.label)}
-              </div>
-              <span class="text-sm sm:text-base font-bold ${item.matched ? 'text-emerald-950' : 'text-slate-800'} break-words">
-                ${escapeHtml(item.label)}
-              </span>
+              <div class="w-8 h-8 rounded-xl ${m ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200/70 text-slate-600'} flex items-center justify-center shrink-0 transition-colors">${getChecklistItemIcon(item.label)}</div>
+              <span class="text-sm sm:text-base font-bold ${m ? 'text-emerald-950' : 'text-slate-800'} break-words min-w-0">${escapeHtml(item.label)}</span>
             </div>
-
             <div class="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onclick="toggleChecklistItem('${item.id}')"
-                class="flex-1 sm:flex-initial min-w-[140px] inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all duration-200 cursor-pointer ${btnClasses}"
-              >
-                ${statusIconHtml}
-                <span>${item.matched ? 'Matched' : 'Mark Matched'}</span>
+              <button type="button" data-action="toggle" aria-pressed="${m}"
+                class="flex-1 sm:flex-initial min-w-[140px] min-h-[44px] inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border transition-all duration-200 cursor-pointer ${btnClasses}">
+                ${statusIcon}<span>${m ? 'Matched' : 'Mark Matched'}</span>
               </button>
-
-              <button
-                type="button"
-                onclick="removeChecklistItem('${item.id}')"
-                title="Remove checklist item"
-                class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition no-print shrink-0 cursor-pointer"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+              <button type="button" data-action="remove" aria-label="Remove ${escapeHtml(item.label)}" title="Remove checklist item"
+                class="tap-target p-2.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition no-print shrink-0 cursor-pointer inline-flex items-center justify-center">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
           </div>
-
-          <div class="space-y-1.5">
-            <div class="relative flex items-center">
-              <input
-                type="text"
-                inputmode="text"
-                value="${escapeHtml(item.notes)}"
-                placeholder="Add remarks (e.g., count, condition, missing)..."
-                oninput="updateChecklistNotes('${item.id}', this.value)"
-                class="w-full min-w-0 px-3.5 py-2 rounded-xl border ${item.matched ? 'border-emerald-200/90 bg-white/90' : 'border-slate-200 bg-white'} focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-xs sm:text-sm text-slate-700 transition"
-              />
-            </div>
+          <div class="space-y-2">
+            <input type="text" data-field="notes" value="${escapeHtml(item.notes)}" autocomplete="off" enterkeyhint="done" aria-label="Remarks for ${escapeHtml(item.label)}"
+              placeholder="Add remarks (e.g., count, condition, missing)..."
+              class="w-full min-w-0 px-3.5 py-2.5 rounded-xl border ${m ? 'border-emerald-200/90 bg-white/90' : 'border-slate-200 bg-white'} focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 text-xs sm:text-sm text-slate-700" />
             <div class="flex flex-wrap items-center gap-1.5 no-print">
-              <button type="button" onclick="applyQuickNote('${item.id}', 'All received & working')" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-white hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 border border-slate-200/80 transition cursor-pointer">+ All working</button>
-              <button type="button" onclick="applyQuickNote('${item.id}', 'Original handed over')" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-white hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 border border-slate-200/80 transition cursor-pointer">+ Original handed over</button>
-              <button type="button" onclick="applyQuickNote('${item.id}', '1 key missing')" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-white hover:bg-amber-50 text-slate-500 hover:text-amber-700 border border-slate-200/80 transition cursor-pointer">+ 1 missing</button>
-              <button type="button" onclick="applyQuickNote('${item.id}', 'Damaged / needs replacement')" class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-700 border border-slate-200/80 transition cursor-pointer">+ Damaged</button>
+              ${QUICK_NOTES.map(([txt, lbl, hov]) => `<button type="button" data-action="note" data-note="${escapeHtml(txt)}" class="chip px-2.5 py-1.5 rounded-md text-xs font-medium bg-white ${hov} text-slate-500 border border-slate-200/80 transition cursor-pointer">${lbl}</button>`).join('')}
             </div>
-          </div>
-        `;
-        container.appendChild(card);
+          </div>`;
+        c.appendChild(card);
       });
-
       updateChecklistProgress();
     }
 
-    function toggleChecklistItem(id) {
-      const item = checklist.find(c => c.id === id);
-      if (item) {
-        item.matched = !item.matched;
-        renderChecklist();
-      }
+    function bindChecklist() {
+      const c = $('checklist-items-container');
+      const find = (el) => { const r = el.closest('[data-id]'); return r ? checklist.find(x => x.id === r.dataset.id) : null; };
+      c.addEventListener('click', (e) => {
+        const b = e.target.closest('[data-action]'); if (!b) return;
+        const item = find(b); if (!item) return;
+        if (b.dataset.action === 'toggle') { item.matched = !item.matched; renderChecklist(); saveState(); }
+        else if (b.dataset.action === 'remove') { checklist = checklist.filter(x => x.id !== item.id); renderChecklist(); saveState(); }
+        else if (b.dataset.action === 'note') applyQuickNote(item.id, b.dataset.note);
+      });
+      c.addEventListener('input', (e) => {
+        if (e.target.dataset.field !== 'notes') return;
+        const item = find(e.target); if (item) { item.notes = e.target.value; saveState(); }
+      });
+      c.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input')) { e.preventDefault(); e.target.blur(); } });
     }
 
     function toggleAllChecklistItems() {
-      if (checklist.length === 0) return;
-      const allMatched = checklist.every(c => c.matched);
-      const targetState = !allMatched;
-      checklist.forEach(c => { c.matched = targetState; });
-      renderChecklist();
-    }
-
-    function updateChecklistNotes(id, val) {
-      const item = checklist.find(c => c.id === id);
-      if (item) {
-        item.notes = val;
-      }
+      if (!checklist.length) return;
+      const target = !checklist.every(c => c.matched);
+      checklist.forEach(c => { c.matched = target; });
+      renderChecklist(); saveState();
     }
 
     function addChecklistItem() {
-      const input = document.getElementById('new-checklist-item-input');
+      const input = $('new-checklist-item-input');
       const label = input.value.trim();
       if (!label) return;
-      checklist.push({
-        id: 'chk-' + Date.now(),
-        label,
-        matched: false,
-        notes: ''
-      });
+      if (checklist.some(c => c.label.toLowerCase() === label.toLowerCase())) { showToast(`"${label}" is already in the list`); return; }
+      checklist.push({ id: uid('chk'), label, matched: false, notes: '' });
       input.value = '';
-      renderChecklist();
-      showToast('Added "' + label + '" to checklist');
-    }
-
-    function removeChecklistItem(id) {
-      checklist = checklist.filter(c => c.id !== id);
-      renderChecklist();
+      renderChecklist(); saveState(); showToast(`Added "${label}" to checklist`);
     }
 
     function updateChecklistProgress() {
-      const total = checklist.length;
-      const matchedCount = checklist.filter(c => c.matched).length;
-      const pct = total === 0 ? 0 : Math.round((matchedCount / total) * 100);
+      const total = checklist.length, done = checklist.filter(c => c.matched).length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      $('checklist-counter').textContent = `${done} of ${total} Matched`;
+      $('checklist-progress-bar').style.width = `${pct}%`;
 
-      document.getElementById('checklist-counter').textContent = `${matchedCount} of ${total} Matched`;
-      document.getElementById('checklist-progress-bar').style.width = `${pct}%`;
-
-      const masterBtn = document.getElementById('master-match-btn');
-      const masterIcon = document.getElementById('master-match-icon');
-      const masterLabel = document.getElementById('master-match-label');
-
-      if (total > 0 && matchedCount === total) {
-        masterBtn.className = 'w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200 shadow-2xs cursor-pointer shrink-0 bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700';
-        masterIcon.className = 'w-5 h-5 rounded-md border-2 border-white bg-white/20 flex items-center justify-center transition-colors';
-        masterIcon.innerHTML = `<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>`;
-        masterLabel.textContent = 'All Items Matched';
+      const btn = $('master-match-btn'), icon = $('master-match-icon'), label = $('master-match-label');
+      const base = 'w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200 shadow-sm cursor-pointer shrink-0 ';
+      if (total > 0 && done === total) {
+        btn.className = base + 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700';
+        icon.className = 'w-5 h-5 rounded-md border-2 border-white bg-white/20 flex items-center justify-center transition-colors';
+        icon.innerHTML = '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>';
+        label.textContent = 'All Items Matched';
       } else {
-        masterBtn.className = 'w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold border transition-all duration-200 shadow-2xs cursor-pointer shrink-0 bg-white text-slate-700 border-slate-300 hover:bg-slate-50';
-        masterIcon.className = 'w-5 h-5 rounded-md border-2 border-slate-300 flex items-center justify-center transition-colors';
-        masterIcon.innerHTML = '';
-        masterLabel.textContent = 'Match All Items';
+        btn.className = base + 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50';
+        icon.className = 'w-5 h-5 rounded-md border-2 border-slate-300 flex items-center justify-center transition-colors';
+        icon.innerHTML = '';
+        label.textContent = 'Match All Items';
       }
     }
 
     // =========================================================================
-    // 5. SHARE (WHATSAPP, EMAIL, CLIPBOARD) & RESET
+    // 6. SHARE / COPY / RESET
     // =========================================================================
     function generateSettlementText(forWhatsApp = false) {
       const b = forWhatsApp ? '*' : '';
-      const tenantName = document.getElementById('tenant-name').value.trim();
-      const unitNumber = document.getElementById('unit-number').value.trim();
-      const moveoutDate = document.getElementById('moveout-date').value;
-
-      const deposit = evaluateAmountInput(document.getElementById('deposit-input').value).value;
-      let totalCredits = 0;
-      const creditLines = [];
-      ownerCredits.forEach(item => {
-        const amt = evaluateAmountInput(item.amount).value;
-        if (amt > 0) {
-          totalCredits += amt;
-          creditLines.push(`  + ${getEffectiveCreditLabel(item)}: ${formatINR(amt)}`);
-        }
-      });
-
-      let totalDeductions = 0;
-      const deductionLines = [];
-      deductions.forEach(item => {
-        const amt = evaluateAmountInput(item.amount).value;
-        if (amt > 0) {
-          totalDeductions += amt;
-          deductionLines.push(`  - ${getEffectiveDeductionLabel(item)}: ${formatINR(amt)}`);
-        }
-      });
-
-      const netBalance = deposit + totalCredits - totalDeductions;
-
-      const lines = [];
-      lines.push(`${b}TENANT MOVE-OUT SETTLEMENT SUMMARY${b}`);
-      if (unitNumber) lines.push(`Unit / Flat: ${unitNumber}`);
-      if (tenantName) lines.push(`Tenant: ${tenantName}`);
-      if (moveoutDate) lines.push(`Handover Date: ${moveoutDate}`);
-      lines.push('----------------------------------------');
-      lines.push(`Security Deposit: ${formatINR(deposit)}`);
-
-      if (creditLines.length > 0) {
-        lines.push('');
-        lines.push(`${b}Owner Credits Payable to Tenant (+):${b}`);
-        lines.push(...creditLines);
-        lines.push(`Total Owner Credits: + ${formatINR(totalCredits)}`);
+      const tenant = $('tenant-name').value.trim(), unit = $('unit-number').value.trim(), date = $('moveout-date').value;
+      const t = computeTotals();
+      const L = [];
+      L.push(`${b}TENANT MOVE-OUT SETTLEMENT SUMMARY${b}`);
+      if (unit) L.push(`Unit / Flat: ${unit}`);
+      if (tenant) L.push(`Tenant: ${tenant}`);
+      if (date) L.push(`Handover Date: ${formatDate(date)}`);
+      L.push('----------------------------------------');
+      L.push(`Security Deposit: ${formatINR(t.deposit)}`);
+      if (t.credits.length) {
+        L.push('', `${b}Owner Credits Payable to Tenant (+):${b}`);
+        t.credits.forEach(c => L.push(`  + ${c.label}: ${formatINR(c.amount)}`));
+        L.push(`Total Owner Credits: + ${formatINR(t.totalCredits)}`);
       }
-
-      lines.push('');
-      lines.push(`${b}Deductions (-):${b}`);
-      if (deductionLines.length > 0) {
-        lines.push(...deductionLines);
-      } else {
-        lines.push('  None');
-      }
-      lines.push(`Total Deductions: - ${formatINR(totalDeductions)}`);
-      lines.push('----------------------------------------');
-
-      if (netBalance >= 0) {
-        lines.push(`${b}NET AMOUNT OWNER PAYS TENANT: ${formatINR(netBalance)}${b}`);
-      } else {
-        lines.push(`${b}BALANCE PAYABLE BY TENANT TO OWNER: ${formatINR(Math.abs(netBalance))}${b}`);
-      }
-
-      lines.push('');
-      lines.push(`${b}HANDOVER CHECKLIST:${b}`);
-      checklist.forEach(item => {
-        const status = item.matched ? '✅ Matched' : '⏳ Pending';
-        const notePart = item.notes && item.notes.trim() ? ` (${item.notes.trim()})` : '';
-        lines.push(`${status} - ${item.label}${notePart}`);
+      L.push('', `${b}Deductions (-):${b}`);
+      if (t.deds.length) t.deds.forEach(d => L.push(`  - ${d.label}: ${formatINR(d.amount)}`)); else L.push('  None');
+      L.push(`Total Deductions: - ${formatINR(t.totalDeductions)}`);
+      L.push('----------------------------------------');
+      L.push(t.net >= 0
+        ? `${b}NET AMOUNT OWNER PAYS TENANT: ${formatINR(t.net)}${b}`
+        : `${b}BALANCE PAYABLE BY TENANT TO OWNER: ${formatINR(Math.abs(t.net))}${b}`);
+      L.push('', `${b}HANDOVER CHECKLIST:${b}`);
+      checklist.forEach(i => {
+        const note = i.notes && i.notes.trim() ? ` (${i.notes.trim()})` : '';
+        L.push(`${i.matched ? '✅ Matched' : '⏳ Pending'} - ${i.label}${note}`);
       });
-
-      return lines.join('\n');
+      return L.join('\n');
     }
 
-    function shareViaWhatsApp() {
-      const text = generateSettlementText(true);
-      const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-      window.open(url, '_blank', 'noopener,noreferrer');
+    function openExternal(url) {
+      const a = document.createElement('a');
+      a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      document.body.appendChild(a); a.click(); a.remove();
     }
+
+    function shareViaWhatsApp() { saveNow(); openExternal('https://wa.me/?text=' + encodeURIComponent(generateSettlementText(true))); }
 
     function shareViaEmail() {
-      const tenantName = document.getElementById('tenant-name').value.trim();
-      const unitNumber = document.getElementById('unit-number').value.trim();
-      const subjectParts = ['Move-Out Settlement Summary'];
-      if (unitNumber) subjectParts.push(unitNumber);
-      if (tenantName) subjectParts.push(tenantName);
-
-      const subject = subjectParts.join(' - ');
-      const body = generateSettlementText(false);
-      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      saveNow();
+      const tenant = $('tenant-name').value.trim(), unit = $('unit-number').value.trim();
+      const subject = ['Move-Out Settlement Summary', unit, tenant].filter(Boolean).join(' - ');
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(generateSettlementText(false))}`;
     }
 
-    function copySummaryToClipboard() {
+    async function shareNative() {
       const text = generateSettlementText(false);
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      try {
-        document.execCommand('copy');
-        showToast('Settlement summary copied to clipboard!');
-      } catch (err) {
-        showToast('Unable to copy summary');
-      }
-      document.body.removeChild(textarea);
+      if (navigator.share) {
+        try { await navigator.share({ title: 'Move-Out Settlement Summary', text }); }
+        catch (e) { /* user cancelled */ }
+      } else { copySummaryToClipboard(); }
     }
 
+    async function copySummaryToClipboard() {
+      const text = generateSettlementText(false);
+      try {
+        if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); showToast('Settlement summary copied!'); return; }
+      } catch (e) { /* fall through to legacy path */ }
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px;';
+      document.body.appendChild(ta);
+      ta.focus(); ta.select(); ta.setSelectionRange(0, text.length);   // setSelectionRange is required on iOS
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      showToast(ok ? 'Settlement summary copied!' : 'Unable to copy - use Share instead');
+    }
+
+    // ---- reset modal ----
     function openResetModal() {
-      const modal = document.getElementById('confirm-modal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      const m = $('confirm-modal');
+      m.classList.remove('hidden'); m.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+      $('cancel-reset-btn').focus();
     }
-
     function closeResetModal() {
-      const modal = document.getElementById('confirm-modal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+      const m = $('confirm-modal');
+      m.classList.add('hidden'); m.classList.remove('flex');
+      document.body.style.overflow = '';
     }
-
     function performReset() {
-      document.getElementById('tenant-name').value = '';
-      document.getElementById('unit-number').value = '';
-      document.getElementById('moveout-date').value = '';
-      document.getElementById('deposit-input').value = '';
+      ['tenant-name', 'unit-number', 'moveout-date', 'deposit-input'].forEach(id => { $(id).value = ''; });
+      deductions = defaultDeductions(); ownerCredits = defaultCredits(); checklist = defaultChecklist(); checklistFilter = 'all';
+      try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+      renderList('credit', false); renderList('deduction', false); setChecklistFilter('all'); recalculateFinances();
+      closeResetModal(); showToast('All fields cleared and reset');
+    }
+    $('cancel-reset-btn').addEventListener('click', closeResetModal);
+    $('confirm-reset-btn').addEventListener('click', performReset);
+    $('confirm-modal').addEventListener('click', (e) => { if (e.target === $('confirm-modal')) closeResetModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeResetModal(); });
 
-      deductions = getDefaultDeductions();
-      ownerCredits = getDefaultCredits();
-      checklist = getDefaultChecklist();
+    // =========================================================================
+    // 7. MATH KEY BAR (phone keypads have no + - x / keys) 
+    // =========================================================================
+    const mathBar = $('math-bar');
+    let mathTarget = null;
+    const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
 
-      renderCredits();
-      renderDeductions();
-      renderChecklist();
-      closeResetModal();
-      showToast('All fields cleared and reset');
+    function positionMathBar() {
+      const vv = window.visualViewport;
+      mathBar.style.bottom = vv ? Math.max(0, window.innerHeight - (vv.height + vv.offsetTop)) + 'px' : '0px';
+    }
+    function showMathBar(el) { mathTarget = el; positionMathBar(); mathBar.classList.add('show'); }
+    function hideMathBar() { mathTarget = null; mathBar.classList.remove('show'); }
+
+    if (coarse) {
+      document.addEventListener('focusin', (e) => { if (e.target.matches && e.target.matches('[data-math]')) showMathBar(e.target); });
+      document.addEventListener('focusout', (e) => {
+        if (!(e.target.matches && e.target.matches('[data-math]'))) return;
+        setTimeout(() => { const a = document.activeElement; if (!(a && a.matches && a.matches('[data-math]'))) hideMathBar(); }, 120);
+      });
+      if (window.visualViewport) {
+        visualViewport.addEventListener('resize', positionMathBar);
+        visualViewport.addEventListener('scroll', positionMathBar);
+      }
+      // pointerdown + preventDefault keeps focus in the field so the keyboard stays open
+      mathBar.addEventListener('pointerdown', (e) => {
+        const b = e.target.closest('button'); if (!b) return;
+        e.preventDefault();
+        if (b.dataset.done) { if (mathTarget) mathTarget.blur(); hideMathBar(); return; }
+        if (!mathTarget) return;
+        const el = mathTarget;
+        const s = el.selectionStart ?? el.value.length, en = el.selectionEnd ?? s;
+        if (b.dataset.back) {
+          if (s !== en) el.setRangeText('', s, en, 'end');
+          else if (s > 0) el.setRangeText('', s - 1, s, 'end');
+        } else el.setRangeText(b.dataset.ins, s, en, 'end');
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      });
     }
 
-    document.getElementById('cancel-reset-btn').addEventListener('click', closeResetModal);
-    document.getElementById('confirm-reset-btn').addEventListener('click', performReset);
+    // =========================================================================
+    // 8. INIT
+    // =========================================================================
+    (function init() {
+      bindList('credit'); bindList('deduction'); bindChecklist();
 
-    // Initialize clean state on load
-    window.addEventListener('DOMContentLoaded', () => {
-      try {
-        localStorage.clear();
-        sessionStorage.clear();
-      } catch (e) {}
-      renderCredits();
-      renderDeductions();
-      renderChecklist();
-    });
+      const dep = $('deposit-input');
+      dep.addEventListener('input', () => { recalculateFinances(); saveState(); });
+      dep.addEventListener('focusout', () => { commitAmountField(dep, null); setPreview($('deposit-calc-preview'), { isExpression: false, valid: true }); });
+      dep.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); dep.blur(); } });
+      ['tenant-name', 'unit-number'].forEach(id => $(id).addEventListener('input', saveState));
+      $('moveout-date').addEventListener('change', saveState);
+      ['tenant-name', 'unit-number'].forEach(id => $(id).addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); }));
+
+      loadState();
+      renderList('credit', false); renderList('deduction', false);
+      setChecklistFilter(checklistFilter);
+      recalculateFinances();
+    })();
+
   </script>
 </body>
 </html>
